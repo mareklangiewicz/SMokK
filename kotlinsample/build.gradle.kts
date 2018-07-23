@@ -6,13 +6,16 @@ plugins {
 }
 
 application {
-    mainClassName = "pl.mareklangiewicz.uspek.MainKt"
+    mainClassName = "pl.mareklangiewicz.rxmock.MainKt"
 }
 
 dependencies {
     implementation(Deps.kotlinStdlib)
     implementation(Deps.junit)
-//    testImplementation(project(":uspek"))
-    testImplementation("com.github.langara:USpek:25459c8b62")
+    testImplementation(Deps.uspek)
+    testImplementation(Deps.rxjava)
+    testImplementation(Deps.rxrelay)
+    testImplementation(project(":rxmock"))
+//    testImplementation("com.github.langara:RxMock:master-SNAPSHOT")
 }
 
