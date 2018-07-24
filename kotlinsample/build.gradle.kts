@@ -11,10 +11,10 @@ application {
 
 dependencies {
     implementation(Deps.kotlinStdlib)
-    implementation(Deps.junit)
+    implementation(Deps.rxjava)
+    implementation(Deps.rxrelay)
+    testImplementation(Deps.junit)
     testImplementation(Deps.uspek)
-    testImplementation(Deps.rxjava)
-    testImplementation(Deps.rxrelay)
     testImplementation(project(":rxmock"))
 //    testImplementation("com.github.langara:RxMock:master-SNAPSHOT")
 }
