@@ -13,3 +13,5 @@ fun webSearch(
         .distinctUntilChanged()
         .switchMapSingle { webSearchCall(it) }
 
+
+// TODO: add new version (wrapper) with debouncing and with parametrized scheduler, and test it with advanceTimeBy...
