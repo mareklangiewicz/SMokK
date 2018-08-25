@@ -21,7 +21,7 @@ class WebSearchTest {
 
             val apiCall = RxMockSingle1<String, List<String>>()
 
-            val resultsS = webSearch(inputTextChangeS, 3, apiCall).test()
+            val resultsS = webSearch(inputTextChangeS, inputMinLength = 3, webSearchCall = apiCall).test()
 
             "On empty text" o {
                 inputTextChangeS put ""
