@@ -6,10 +6,6 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Consumer
 import io.reactivex.subjects.MaybeSubject
 
-// TODO NOW: add invocationCheck to all RxMock classes and test it
-// (it makes sense for parameterless versions too!)
-// TODO NOW: make subject public in all RxMock classes - we want to allow easy hacking in tests
-
 class RxMockMaybe1<A, T>(var invocationCheck: (A) -> Boolean = { true })
     : MaybeObserver<T>, Consumer<T>, (A) -> Maybe<T> {
 
@@ -19,9 +15,9 @@ class RxMockMaybe1<A, T>(var invocationCheck: (A) -> Boolean = { true })
 
     var subject: MaybeSubject<T>? = null
 
-    override fun invoke(arg1: A): Maybe<T> {
-        if (!invocationCheck(arg1)) throw RxMockException("Rx mock invocation check failed")
-        invocations += arg1
+    override fun invoke(arg: A): Maybe<T> {
+        if (!invocationCheck(arg)) throw RxMockException("RxMockMaybe1 fail for arg: $arg")
+        invocations += arg
         return MaybeSubject.create<T>().also { subject = it }
     }
 

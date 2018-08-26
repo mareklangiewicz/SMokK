@@ -7,21 +7,24 @@ import io.reactivex.functions.Consumer
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 
-class RxMockObservable1<A, T> : Observer<T>, Consumer<T>, (A) -> Observable<T> {
+class RxMockObservable1<A, T>(var invocationCheck: (A) -> Boolean = { true })
+    : Observer<T>, Consumer<T>, (A) -> Observable<T> {
+
+    constructor(vararg allowedArgs: A) : this({ it in allowedArgs })
 
     val invocations = mutableListOf<A>()
 
-    private lateinit var subject: Subject<T>
+    var subject: Subject<T>? = null
 
-    override fun invoke(arg1: A): Observable<T> {
-        invocations += arg1
-        subject = PublishSubject.create<T>()
-        return subject
+    override fun invoke(arg: A): Observable<T> {
+        if (!invocationCheck(arg)) throw RxMockException("RxMockObservable1 fail for arg: $arg")
+        invocations += arg
+        return PublishSubject.create<T>().also { subject = it }
     }
 
     override fun accept(t: T) = onNext(t)
-    override fun onNext(t: T) = subject.onNext(t)
-    override fun onComplete() = subject.onComplete()
-    override fun onSubscribe(d: Disposable) = subject.onSubscribe(d)
-    override fun onError(e: Throwable) = subject.onError(e)
+    override fun onNext(t: T) = subject?.onNext(t) ?: throw RxMockException()
+    override fun onComplete() = subject?.onComplete() ?: throw RxMockException()
+    override fun onSubscribe(d: Disposable) = subject?.onSubscribe(d) ?: throw RxMockException()
+    override fun onError(e: Throwable) = subject?.onError(e) ?: throw RxMockException()
 }
