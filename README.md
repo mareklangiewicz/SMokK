@@ -9,7 +9,7 @@ Tiny library for mocking RxJava calls.
         val inputTextChangeS = PublishRelay.create<String>()
         val apiCall = RxMockSingle1<String, List<String>>()
         
-        val resultS = webSearch(inputTextChangeS, inputMinLength = 3, webSearchCall = apiCall).test()
+        val resultsS = webSearch(inputTextChangeS, inputMinLength = 3, webSearchCall = apiCall).test()
         
         apiCall.invocations.size eq 0
         
@@ -21,19 +21,19 @@ Tiny library for mocking RxJava calls.
         
         apiCall.invocations.size eq 1
         apiCall.invocations[0] eq "abc"
-        resultS.assertEmpty() // do not emit any search results yet
+        resultsS.assertEmpty() // do not emit any search results yet
         
         val abcResults = listOf("abc is nice", "abc starts a song")
         apiCall put abcResults // simulate successful api response
         
-        resultS.assertValue(abcResults)
+        resultsS.assertValue(abcResults)
         
         inputTextChangeS put "abce"
         
         val abceError = IOException("Broken network connection")
         apiCall.onError(abceError) // simulate error api response for last api call
         
-        resultS.assertError(abceError)
+        resultsS.assertError(abceError)
     }
 
     infix fun <T> T.eq(expected: T) = Assert.assertEquals(expected, this)
