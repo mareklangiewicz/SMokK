@@ -2,8 +2,10 @@
 
 package pl.mareklangiewicz.rxmock
 
+import io.reactivex.exceptions.UndeliverableException
 import io.reactivex.functions.Consumer
 import io.reactivex.observers.TestObserver
+import io.reactivex.plugins.RxJavaPlugins
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 
@@ -44,4 +46,8 @@ infix fun <T> Collection<T>.hasTwo(t: T) = assertEquals(2, count { it == t })
 infix fun <T> Collection<T>.hasThree(t: T) = assertEquals(3, count { it == t })
 
 infix fun <T> Collection<T>.hasAny(t: T) = assertTrue("Collection contains: $this", contains(t))
+
+fun setupRxJavaErrorHandler() {
+    RxJavaPlugins.setErrorHandler { if (it !is UndeliverableException) throw it }
+}
 

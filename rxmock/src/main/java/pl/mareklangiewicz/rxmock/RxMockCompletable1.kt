@@ -2,12 +2,8 @@ package pl.mareklangiewicz.rxmock
 
 import io.reactivex.Completable
 import io.reactivex.CompletableObserver
-import io.reactivex.Maybe
-import io.reactivex.MaybeObserver
 import io.reactivex.disposables.Disposable
-import io.reactivex.functions.Consumer
 import io.reactivex.subjects.CompletableSubject
-import io.reactivex.subjects.MaybeSubject
 
 class RxMockCompletable1<A>(var invocationCheck: (A) -> Boolean = { true })
     : CompletableObserver, (A) -> Completable {

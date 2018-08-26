@@ -17,6 +17,8 @@ class MessengerTest {
     @Test
     fun messengerTest() {
 
+        setupRxJavaErrorHandler()
+
         uspek("messenger test") {
 
             val sendMessageEventS = PublishRelay.create<Message>()
