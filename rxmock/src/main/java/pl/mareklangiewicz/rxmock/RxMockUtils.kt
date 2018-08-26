@@ -12,20 +12,24 @@ infix fun <T> TestObserver<T>.isNow(value: T) {
 }
 
 infix fun <T> TestObserver<T>.hasNow(predicate: T.() -> Boolean) {
-    assertTrue(values().last().predicate())
+    val values = values()
+    assertTrue("TestObserver values: $values", values.last().predicate())
 }
 
 infix fun <T> TestObserver<T>.hadAny(predicate: T.() -> Boolean) {
-    assertTrue(values().any { it.predicate() })
+    val values = values()
+    assertTrue("TestObserver values: $values", values.any { it.predicate() })
 }
 
 infix fun <T> TestObserver<T>.wasAny(value: T) {
-    assertTrue(values().any { it == value })
+    val values = values()
+    assertTrue("TestObserver values: $values", values.any { it == value })
 }
 
 @Suppress("UNCHECKED_CAST")
 infix fun <T> TestObserver<*>.hasNowType(predicate: T.() -> Boolean) {
-    assertTrue((values().last() as T).predicate())
+    val values = values()
+    assertTrue("TestObserver values: $values", (values.last() as T).predicate())
 }
 
 
@@ -39,5 +43,5 @@ infix fun <T> Collection<T>.hasTwo(t: T) = assertEquals(2, count { it == t })
 
 infix fun <T> Collection<T>.hasThree(t: T) = assertEquals(3, count { it == t })
 
-infix fun <T> Collection<T>.hasAny(t: T) = assertTrue(contains(t))
+infix fun <T> Collection<T>.hasAny(t: T) = assertTrue("Collection contains: $this", contains(t))
 
