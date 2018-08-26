@@ -14,9 +14,9 @@ class RxMockCompletable1<A>(var invocationCheck: (A) -> Boolean = { true })
 
     var subject: CompletableSubject? = null
 
-    override fun invoke(arg1: A): Completable {
-        if (!invocationCheck(arg1)) throw RxMockException("Rx mock invocation check failed")
-        invocations += arg1
+    override fun invoke(arg: A): Completable {
+        if (!invocationCheck(arg)) throw RxMockException("RxMock fail for arg: $arg")
+        invocations += arg
         return CompletableSubject.create().also { subject = it }
     }
 
