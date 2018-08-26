@@ -5,18 +5,18 @@ import io.reactivex.CompletableObserver
 import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.CompletableSubject
 
-class RxMockCompletable1<A>(var invocationCheck: (A) -> Boolean = { true })
-    : CompletableObserver, (A) -> Completable {
+class RxMockCompletable2<A1, A2>(var invocationCheck: (A1, A2) -> Boolean = { _, _ -> true })
+    : CompletableObserver, (A1, A2) -> Completable {
 
-    constructor(vararg allowedArgs: A) : this({ it in allowedArgs })
+    constructor(vararg allowedArgs: Pair<A1, A2>) : this({ a1, a2 -> a1 to a2 in allowedArgs })
 
-    val invocations = mutableListOf<A>()
+    val invocations = mutableListOf<Pair<A1, A2>>()
 
     var subject: CompletableSubject? = null
 
-    override fun invoke(arg: A): Completable {
-        if (!invocationCheck(arg)) throw RxMockException("RxMockCompletable1 fail for arg: $arg")
-        invocations += arg
+    override fun invoke(arg1: A1, arg2: A2): Completable {
+        if (!invocationCheck(arg1, arg2)) throw RxMockException("RxMockCompletable2 fail for args: $arg1, $arg2")
+        invocations += arg1 to arg2
         return CompletableSubject.create().also { subject = it }
     }
 
