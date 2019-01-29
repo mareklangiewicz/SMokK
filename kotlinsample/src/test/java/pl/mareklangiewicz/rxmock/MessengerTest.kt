@@ -4,14 +4,14 @@ import com.jakewharton.rxrelay2.PublishRelay
 import io.reactivex.schedulers.TestScheduler
 import org.junit.Test
 import org.junit.runner.RunWith
-import pl.mareklangiewicz.uspek.USpek.o
-import pl.mareklangiewicz.uspek.USpek.uspek
-import pl.mareklangiewicz.uspek.USpekJUnitRunner
+import pl.mareklangiewicz.uspek.USpekRunner
 import pl.mareklangiewicz.uspek.eq
+import pl.mareklangiewicz.uspek.o
+import pl.mareklangiewicz.uspek.uspek
 import java.io.IOException
 import java.util.concurrent.TimeUnit.SECONDS
 
-@RunWith(USpekJUnitRunner::class)
+@RunWith(USpekRunner::class)
 class MessengerTest {
 
     @Test
@@ -19,7 +19,7 @@ class MessengerTest {
 
         setupRxJavaErrorHandler()
 
-        uspek("messenger test") {
+        uspek {
 
             val sendMessageEventS = PublishRelay.create<Message>()
             val apiSendMessage = RxMockCompletable1<Message>()

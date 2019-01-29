@@ -3,19 +3,19 @@ package pl.mareklangiewicz.rxmock
 import com.jakewharton.rxrelay2.PublishRelay
 import org.junit.Test
 import org.junit.runner.RunWith
-import pl.mareklangiewicz.uspek.USpek.o
-import pl.mareklangiewicz.uspek.USpek.uspek
-import pl.mareklangiewicz.uspek.USpekJUnitRunner
+import pl.mareklangiewicz.uspek.o
+import pl.mareklangiewicz.uspek.uspek
+import pl.mareklangiewicz.uspek.USpekRunner
 import pl.mareklangiewicz.uspek.eq
 import java.io.IOException
 
-@RunWith(USpekJUnitRunner::class)
+@RunWith(USpekRunner::class)
 class WebSearchTest {
 
     @Test
     fun webSearchTest() {
 
-        uspek("web search test") {
+        uspek {
 
             val inputTextChangeS = PublishRelay.create<String>()
 
