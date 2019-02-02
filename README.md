@@ -5,6 +5,56 @@ A little bit scary library for mocking suspendable functions in Kotlin :-)
 ### Example
 
 ```kotlin
+
+    suspend fun getUserDetailsFast(
+        userId: Int,
+        fetchUserDetails: suspend (Int) -> String?,
+        getCachedUserDetails: suspend (Int) -> String?,
+        putCachedUserDetails: (Int, String) -> Unit
+    ): String?  = coroutineScope {
+        val cached = async { getCachedUserDetails(userId) }
+        val new = async { fetchUserDetails(userId) }
+        cached.await() ?: new.await()?.also { putCachedUserDetails(userId, it) }
+    }
+
+
+    @Test
+    fun getUserDetailsFastTest() {
+
+        val cache = mutableMapOf<Int, String>()
+
+        val fetchUserDetails = smokk<Int, String?>()
+        val getCachedUserDetails = smokk<Int, String?>()
+        fun putCachedUserDetails(id: Int, details: String) { cache[id] = details }
+
+        val job = GlobalScope.launch(Dispatchers.Unconfined) {
+            val details = getUserDetailsFast(
+                userId = 1,
+                fetchUserDetails = fetchUserDetails::invoke,
+                getCachedUserDetails = getCachedUserDetails::invoke,
+                putCachedUserDetails = ::putCachedUserDetails
+            )
+            assert(details == "abc")
+        }
+
+        assert(job.isActive)
+
+        getCachedUserDetails.resume(null)
+
+        assert(job.isActive)
+
+        fetchUserDetails.resume("abc")
+
+        assert(job.isCompleted)
+
+        // TODO: better tests; split to smaller cases
+        // TODO: show that we can test different "race conditions"
+    }
+
+
+
+
+
     suspend fun webSearch(
         inputTextChangeS: Observable<String>,
         inputMinLength: Int,
@@ -79,7 +129,7 @@ Full examples are available in the ```kotlinsample``` directory
     }
    
     dependencies {
-        testImplementation 'com.github.langara:SMokK:0.0.1'
+        testImplementation 'com.github.langara:SMokK:0.0.2'
     }
 ```
 

@@ -8,6 +8,7 @@ version = "0.0.1"
 
 dependencies {
     implementation(Deps.kotlinStdlib8)
+    implementation(Deps.tuplek)
     implementation(Deps.junit)
 }
 
