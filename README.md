@@ -1,48 +1,76 @@
-# RxMock
-Tiny library for mocking RxJava calls.
+# SMokK
+
+A little bit scary library for mocking suspendable functions in Kotlin :-)
 
 ### Example
+
 ```kotlin
-    @Test
-    fun someApiCallTest() { // whole scenario in one test just for brevity
+    suspend fun webSearch(
+        inputTextChangeS: Observable<String>,
+        inputMinLength: Int,
+        webSearchCall: suspend (String) -> List<String>,
+        renderResults: (List<String>) -> Unit
+    ) {
+        renderResults(emptyList())
+        while (true) {
+            val text = inputTextChangeS.awaitFirstOrNull()
+            if (text === null) break
+            if (text.length < inputMinLength) continue
+            try {
+                val result = webSearchCall(text)
+                renderResults(result)
+            } catch (e: RuntimeException) {
+                renderResults(listOf(e.message ?: "network error"))
+            }
+        }
+    }
     
-        val inputTextChangeS = PublishRelay.create<String>()
-        val apiCall = RxMockSingle1<String, List<String>>()
+    infix fun <T> T.eq(expected: T) = Assert.assertEquals(expected, this)
+    
+    @Test
+    fun webSearchTest() { // one big test just for brevity
+    
+        val inputTextChangeS = PublishSubject.create<String>()
+        val apiCall = smokk<String, List<String>>()
         
-        val resultsS = webSearch(inputTextChangeS, inputMinLength = 3, webSearchCall = apiCall).test()
+        val job = GlobalScope.launch(Dispatchers.Unconfined) {
+            webSearch(inputTextChangeS, 3, apiCall::invoke) { println(it) }
+        }
         
+        assert(job.isActive)
         apiCall.invocations.size eq 0
         
-        inputTextChangeS put "ab" // too short to call api
+        inputTextChangeS.onNext("") // too short text - no api call
         
-        apiCall.invocations.size eq 0
+        apiCall.invocations.size eq 0 // no api call
         
-        inputTextChangeS put "abc"
+        inputTextChangeS.onNext("aaa")
         
         apiCall.invocations.size eq 1
-        apiCall.invocations[0] eq "abc"
-        resultsS.assertEmpty() // do not emit any search results yet
+        apiCall.invocations[0] eq "aaa"
         
-        val abcResults = listOf("abc is nice", "abc starts a song")
-        apiCall put abcResults // simulate successful api response
+        apiCall.resume(listOf("aaa bla", "aaa ble"))
         
-        resultsS.assertValue(abcResults)
+        inputTextChangeS.onNext("xy") // too short text again
         
-        inputTextChangeS put "abce"
-        
-        val abceError = IOException("Broken network connection")
-        apiCall.onError(abceError) // simulate error api response for last api call
-        
-        resultsS.assertError(abceError)
-    }
+        apiCall.invocations.size eq 1 // no new api call
 
-    infix fun <T> T.eq(expected: T) = Assert.assertEquals(expected, this)
-    infix fun <T> Consumer<T>.put(value: T) = accept(value)
+        inputTextChangeS.onNext("abcde")
+
+        apiCall.invocations.size eq 2
+        apiCall.invocations.last() eq "abcde"
+
+        apiCall.resumeWithException(RuntimeException("terrible network failure"))
+
+        inputTextChangeS.onComplete()
+
+        assert(job.isCompleted)
+    }
 ```
 
 Full examples are available in the ```kotlinsample``` directory
 
-[![](https://jitpack.io/v/langara/RxMock.svg)](https://jitpack.io/#langara/RxMock)
+[![](https://jitpack.io/v/langara/SMokK.svg)](https://jitpack.io/#langara/SMokK)
 
 ### Building with JitPack
 ```gradle
@@ -51,8 +79,8 @@ Full examples are available in the ```kotlinsample``` directory
     }
    
     dependencies {
-        testImplementation 'com.github.langara:RxMock:master-SNAPSHOT'
+        testImplementation 'com.github.langara:SMokK:0.0.1'
     }
 ```
 
-details: https://jitpack.io/#langara/RxMock
+details: https://jitpack.io/#langara/SMokK

@@ -6,16 +6,18 @@ plugins {
 }
 
 application {
-    mainClassName = "pl.mareklangiewicz.rxmock.MainKt"
+    mainClassName = "pl.mareklangiewicz.smokk.MainKt"
 }
 
 dependencies {
-    implementation(Deps.kotlinStdlib)
+    implementation(Deps.kotlinStdlib8)
     implementation(Deps.rxjava)
     implementation(Deps.rxrelay)
+    implementation(Deps.kotlinxCoroutinesCore)
+    implementation(Deps.kotlinxCoroutinesRx2)
     testImplementation(Deps.junit)
     testImplementation(Deps.uspek)
-    testImplementation(project(":rxmock"))
-//    testImplementation("com.github.langara:RxMock:master-SNAPSHOT")
+    testImplementation(project(":smokk"))
+//    testImplementation("com.github.langara:SMokK:0.0.1")
 }
 

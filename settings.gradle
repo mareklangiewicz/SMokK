@@ -1,2 +1,2 @@
-include ':rxmock'
+include ':smokk'
 include ':kotlinsample'
