@@ -4,12 +4,12 @@ plugins {
 }
 
 group = "com.github.langara.smokk"
-version = "0.0.2"
+version = "0.0.3"
 
 dependencies {
     implementation(Deps.kotlinStdlib8)
-    implementation(Deps.tuplek)
     implementation(Deps.junit)
+    api(Deps.tuplek)
 }
 
 // Create sources Jar from main kotlin sources
