@@ -11,5 +11,5 @@ suspend fun getUserDetailsFast(
 ): String?  = coroutineScope {
     val cached = async { getCachedUserDetails(userId) }
     val new = async { fetchUserDetails(userId) }
-    cached.await() ?: new.await()?.also { putCachedUserDetails(userId, it) }
+    cached.await()?.also { new.cancel() } ?: new.await()?.also { putCachedUserDetails(userId, it) }
 }
