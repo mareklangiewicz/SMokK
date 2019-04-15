@@ -129,7 +129,7 @@ Full examples are available in the ```kotlinsample``` directory
     }
    
     dependencies {
-        testImplementation 'com.github.langara:SMokK:0.0.2'
+        testImplementation 'com.github.langara:SMokK:$smokk_version'
     }
 ```
 
