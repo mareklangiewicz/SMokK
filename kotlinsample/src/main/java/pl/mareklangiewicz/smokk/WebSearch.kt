@@ -11,8 +11,7 @@ suspend fun webSearch(
 ) {
     renderResults(emptyList())
     while (true) {
-        val text = inputTextChangeS.awaitFirstOrNull()
-        if (text === null) break
+        val text = inputTextChangeS.awaitFirstOrNull() ?: break
         if (text.length < inputMinLength) continue
         try {
             val result = webSearchCall(text)

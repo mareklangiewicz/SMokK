@@ -9,6 +9,7 @@ version = "0.0.4"
 dependencies {
     implementation(Deps.kotlinStdlib8)
     implementation(Deps.junit)
+    implementation(Deps.kotlinxCoroutinesCore)
     api(Deps.tuplek)
 }
 

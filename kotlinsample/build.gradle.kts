@@ -18,6 +18,7 @@ dependencies {
     testImplementation(Deps.junit)
     testImplementation(Deps.uspek)
     testImplementation(project(":smokk"))
+    testImplementation(project(":smokkx"))
 //    testImplementation("com.github.langara:SMokK:0.0.2")
 }
 
