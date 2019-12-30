@@ -7,10 +7,10 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.junit.Test
 import org.junit.runner.RunWith
-import pl.mareklangiewicz.uspek.o
-import pl.mareklangiewicz.uspek.uspek
 import pl.mareklangiewicz.uspek.USpekRunner
 import pl.mareklangiewicz.uspek.eq
+import pl.mareklangiewicz.uspek.o
+import pl.mareklangiewicz.uspek.uspek
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 

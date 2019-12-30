@@ -1,5 +1,3 @@
-import java.net.URI
-
 plugins {
     application
     kotlin("jvm")

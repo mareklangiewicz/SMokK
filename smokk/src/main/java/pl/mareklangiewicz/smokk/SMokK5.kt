@@ -1,7 +1,6 @@
 package pl.mareklangiewicz.smokk
 
 import pl.mareklangiewicz.tuplek.Jackson
-import pl.mareklangiewicz.tuplek.Quad
 import pl.mareklangiewicz.tuplek.fi
 import pl.mareklangiewicz.tuplek.fo
 import pl.mareklangiewicz.tuplek.tre

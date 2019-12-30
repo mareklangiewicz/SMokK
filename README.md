@@ -5,117 +5,58 @@ A little bit scary library for mocking suspendable functions in Kotlin :-)
 ### Example
 
 ```kotlin
+suspend fun getUserDetailsFast(
+    userId: Int,
+    fetchUserDetails: suspend (Int) -> String?,
+    getCachedUserDetails: suspend (Int) -> String?,
+    putCachedUserDetails: suspend (Int, String) -> Unit
+): String?  = coroutineScope {
+    val cached = async { getCachedUserDetails(userId) }
+    val new = async { fetchUserDetails(userId) }
+    cached.await()?.also { new.cancel() } ?: new.await()?.also { putCachedUserDetails(userId, it) }
+}
 
-    suspend fun getUserDetailsFast(
-        userId: Int,
-        fetchUserDetails: suspend (Int) -> String?,
-        getCachedUserDetails: suspend (Int) -> String?,
-        putCachedUserDetails: (Int, String) -> Unit
-    ): String?  = coroutineScope {
-        val cached = async { getCachedUserDetails(userId) }
-        val new = async { fetchUserDetails(userId) }
-        cached.await() ?: new.await()?.also { putCachedUserDetails(userId, it) }
-    }
+@Test
+fun getUserDetailsFastTest() {
 
+    uspek {
 
-    @Test
-    fun getUserDetailsFastTest() {
+        "On getUserDetailsFast" o {
 
-        val cache = mutableMapOf<Int, String>()
+            val fetchUserDetails = smokk<Int, String?>()
+            val getCachedUserDetails = smokk<Int, String?>()
+            val putCachedUserDetails = smokk<Int, String, Unit>()
 
-        val fetchUserDetails = smokk<Int, String?>()
-        val getCachedUserDetails = smokk<Int, String?>()
-        fun putCachedUserDetails(id: Int, details: String) { cache[id] = details }
+            val deferred = GlobalScope.async(Dispatchers.Unconfined) {
+                runCatching {
+                    getUserDetailsFast(
+                        userId = 7,
+                        fetchUserDetails = fetchUserDetails::invoke,
+                        getCachedUserDetails = getCachedUserDetails::invoke,
+                        putCachedUserDetails = putCachedUserDetails::invoke
+                    )
+                }
+            }
 
-        val job = GlobalScope.launch(Dispatchers.Unconfined) {
-            val details = getUserDetailsFast(
-                userId = 1,
-                fetchUserDetails = fetchUserDetails::invoke,
-                getCachedUserDetails = getCachedUserDetails::invoke,
-                putCachedUserDetails = ::putCachedUserDetails
-            )
-            assert(details == "abc")
-        }
+            "is active" o { deferred.isActive eq true }
+            "getting cached details started" o { getCachedUserDetails.invocations eq listOf(7) }
+            "fetching details started too" o { fetchUserDetails.invocations eq listOf(7) }
 
-        assert(job.isActive)
+            "On cached details" o {
+                getCachedUserDetails.resume("cached details")
 
-        getCachedUserDetails.resume(null)
+                "is still active" o { deferred.isActive eq true }
 
-        assert(job.isActive)
+                "On fetching cancelled" o { // see GetUserDetailsFastXTest for autoCancel and cancellation checking
+                    fetchUserDetails.resumeWithException(CancellationException())
 
-        fetchUserDetails.resume("abc")
-
-        assert(job.isCompleted)
-
-        // TODO: better tests; split to smaller cases
-        // TODO: show that we can test different "race conditions"
-    }
-
-
-
-
-
-    suspend fun webSearch(
-        inputTextChangeS: Observable<String>,
-        inputMinLength: Int,
-        webSearchCall: suspend (String) -> List<String>,
-        renderResults: (List<String>) -> Unit
-    ) {
-        renderResults(emptyList())
-        while (true) {
-            val text = inputTextChangeS.awaitFirstOrNull()
-            if (text === null) break
-            if (text.length < inputMinLength) continue
-            try {
-                val result = webSearchCall(text)
-                renderResults(result)
-            } catch (e: RuntimeException) {
-                renderResults(listOf(e.message ?: "network error"))
+                    "return cached details" o { deferred.getCompleted() eq success("cached details") }
+                }
             }
         }
     }
-    
-    infix fun <T> T.eq(expected: T) = Assert.assertEquals(expected, this)
-    
-    @Test
-    fun webSearchTest() { // one big test just for brevity
-    
-        val inputTextChangeS = PublishSubject.create<String>()
-        val apiCall = smokk<String, List<String>>()
-        
-        val job = GlobalScope.launch(Dispatchers.Unconfined) {
-            webSearch(inputTextChangeS, 3, apiCall::invoke) { println(it) }
-        }
-        
-        assert(job.isActive)
-        apiCall.invocations.size eq 0
-        
-        inputTextChangeS.onNext("") // too short text - no api call
-        
-        apiCall.invocations.size eq 0 // no api call
-        
-        inputTextChangeS.onNext("aaa")
-        
-        apiCall.invocations.size eq 1
-        apiCall.invocations[0] eq "aaa"
-        
-        apiCall.resume(listOf("aaa bla", "aaa ble"))
-        
-        inputTextChangeS.onNext("xy") // too short text again
-        
-        apiCall.invocations.size eq 1 // no new api call
+}
 
-        inputTextChangeS.onNext("abcde")
-
-        apiCall.invocations.size eq 2
-        apiCall.invocations.last() eq "abcde"
-
-        apiCall.resumeWithException(RuntimeException("terrible network failure"))
-
-        inputTextChangeS.onComplete()
-
-        assert(job.isCompleted)
-    }
 ```
 
 Full examples are available in the ```kotlinsample``` directory
