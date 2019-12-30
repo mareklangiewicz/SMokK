@@ -7,6 +7,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import org.junit.Test
 import org.junit.runner.RunWith
+import pl.mareklangiewicz.smokkx.smokkx
 import pl.mareklangiewicz.uspek.USpekRunner
 import pl.mareklangiewicz.uspek.eq
 import pl.mareklangiewicz.uspek.o
@@ -16,19 +17,19 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 @RunWith(USpekRunner::class)
-class GetUserDetailsFastTest {
+class GetUserDetailsFastXTest {
 
     @ExperimentalCoroutinesApi
     @Test
-    fun getUserDetailsFastTest() {
+    fun getUserDetailsFastXTest() {
 
         uspek {
 
             "On getUserDetailsFast" o {
 
-                val fetchUserDetails = smokk<Int, String?>()
-                val getCachedUserDetails = smokk<Int, String?>()
-                val putCachedUserDetails = smokk<Int, String, Unit>()
+                val fetchUserDetails = smokkx<Int, String?>(autoCancel = true)
+                val getCachedUserDetails = smokkx<Int, String?>(autoCancel = true)
+                val putCachedUserDetails = smokkx<Int, String, Unit>(autoCancel = true) { _, _ -> Unit }
 
                 val deferred = GlobalScope.async(Dispatchers.Unconfined) {
                     runCatching {
@@ -48,13 +49,8 @@ class GetUserDetailsFastTest {
                 "On cached details" o {
                     getCachedUserDetails.resume("cached details")
 
-                    "is still active" o { deferred.isActive eq true }
-
-                    "On fetching cancelled" o { // see GetUserDetailsFastXTest for autoCancel and cancellation checking
-                        fetchUserDetails.resumeWithException(CancellationException())
-
-                        "return cached details" o { deferred.getCompleted() eq success("cached details") }
-                    }
+                    "fetching is cancelled" o { fetchUserDetails.cancellations eq 1 }
+                    "return cached details" o { deferred.getCompleted() eq success("cached details") }
                 }
 
                 "On no cached details" o {
@@ -67,12 +63,9 @@ class GetUserDetailsFastTest {
 
                         "put fetched details to cache" o {
                             putCachedUserDetails.invocations eq listOf(7 to "details from network")
+                            // putCachedUserDetails resumes immediately thanks to autoResume
                         }
-                        "On putting to cache finish" o { // see GetUserDetailsFastXTest for mocking with autoResume
-                            putCachedUserDetails.resume(Unit)
-
-                            "return fetched details" o { deferred.getCompleted() eq success("details from network") }
-                        }
+                        "return fetched details" o { deferred.getCompleted() eq success("details from network") }
                     }
 
                     "On fetching network error" o {
@@ -82,20 +75,23 @@ class GetUserDetailsFastTest {
                         "is completed" o { deferred.isCompleted eq true }
                         "return failure" o { deferred.getCompleted().exceptionOrNull()?.message eq "network error" }
                     }
+
+                }
+
+                "On cancel whole thing from outside" o {
+                    deferred.cancel()
+
+                    "getting cached details is cancelled" o { getCachedUserDetails.cancellations eq 1 }
                 }
 
                 "On cached details error" o {
                     getCachedUserDetails.resumeWithException(RuntimeException("cache error"))
 
-                    "is still active" o { deferred.isActive eq true }
-
-                    "On fetching cancelled" o { // see GetUserDetailsFastXTest for autoCancel and cancellation checking
-                        fetchUserDetails.resumeWithException(CancellationException())
-
-                        "return cache error" o { deferred.getCompleted().exceptionOrNull()?.message eq "cache error" }
-                    }
+                    "fetching is cancelled" o { fetchUserDetails.cancellations eq 1 }
+                    "return cache error" o { deferred.getCompleted().exceptionOrNull()?.message eq "cache error" }
                 }
             }
         }
     }
 }
+

@@ -6,17 +6,17 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.suspendCoroutine
 
-class SMokKX0<T>(var autoCancel: Boolean = false, var autoResume: (suspend () -> T)? = null) : Continuation<T> {
+class SMokKX1<A, T>(var autoCancel: Boolean = false, var autoResume: (suspend (A) -> T)? = null) : Continuation<T> {
 
-    var invocations = 0
+    val invocations = mutableListOf<A>()
 
     var cancellations = 0
 
     var continuation: Continuation<T>? = null
 
-    suspend fun invoke(): T {
-        invocations ++
-        autoResume?.let { return it() }
+    suspend fun invoke(arg: A): T {
+        invocations += arg
+        autoResume?.let { return it(arg) }
         return if (autoCancel) suspendCancellableCoroutine {
             continuation = it
             it.invokeOnCancellation { continuation = null; cancellations ++ }
@@ -25,7 +25,7 @@ class SMokKX0<T>(var autoCancel: Boolean = false, var autoResume: (suspend () ->
     }
 
     override fun resumeWith(result: Result<T>) {
-        val c = continuation ?: throw SMokKXException("SMokKX0.invoke not started")
+        val c = continuation ?: throw SMokKXException("SMokKX1.invoke not started")
         continuation = null
         c.resumeWith(result)
     }
@@ -33,4 +33,4 @@ class SMokKX0<T>(var autoCancel: Boolean = false, var autoResume: (suspend () ->
     override val context: CoroutineContext get() = continuation?.context ?: EmptyCoroutineContext
 }
 
-fun <T> smokkx(autoCancel: Boolean = false, autoResume: (suspend () -> T)? = null) = SMokKX0<T>(autoCancel, autoResume)
+fun <A, T> smokkx(autoCancel: Boolean = false, autoResume: (suspend (A) -> T)? = null) = SMokKX1<A, T>(autoCancel, autoResume)

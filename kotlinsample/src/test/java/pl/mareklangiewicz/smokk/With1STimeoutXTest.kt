@@ -16,7 +16,7 @@ import kotlin.coroutines.resumeWithException
 
 @ExperimentalCoroutinesApi
 @RunWith(USpekRunner::class)
-class With1STimeoutTest {
+class With1STimeoutXTest {
 
     @Test
     fun with1STimeoutTest() {
@@ -30,7 +30,7 @@ class With1STimeoutTest {
                 val block = smokkx<Unit>(autoCancel = true)
 
                 val job = GlobalScope.launch(Dispatchers.Unconfined) {
-                    with1STimeout(delay1s::invoke) { block() }
+                    with1STimeout(delay1s::invoke, block::invoke)
                 }
 
                 "job is active" o { job.isActive eq true }
