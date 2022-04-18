@@ -61,17 +61,3 @@ fun getUserDetailsFastTest() {
 
 Full examples are available in the ```kotlinsample``` directory
 
-[![](https://jitpack.io/v/langara/SMokK.svg)](https://jitpack.io/#langara/SMokK)
-
-### Building with JitPack
-```gradle
-    repositories {
-        maven { url "https://jitpack.io" }
-    }
-   
-    dependencies {
-        testImplementation 'com.github.langara:SMokK:$smokk_version'
-    }
-```
-
-details: https://jitpack.io/#langara/SMokK
