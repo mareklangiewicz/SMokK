@@ -6,5 +6,6 @@
 /build
 /captures
 uspek/out
+my.gradle.log
 .externalNativeBuild
 out/
