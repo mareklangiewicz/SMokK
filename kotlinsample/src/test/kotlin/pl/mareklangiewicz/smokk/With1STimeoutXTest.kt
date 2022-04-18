@@ -4,24 +4,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.TestFactory
 import pl.mareklangiewicz.smokkx.smokkx
-import pl.mareklangiewicz.uspek.USpekRunner
-import pl.mareklangiewicz.uspek.eq
-import pl.mareklangiewicz.uspek.o
-import pl.mareklangiewicz.uspek.uspek
+import pl.mareklangiewicz.uspek.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 @ExperimentalCoroutinesApi
-@RunWith(USpekRunner::class)
 class With1STimeoutXTest {
 
-    @Test
-    fun with1STimeoutTest() {
+    @TestFactory
+    fun with1STimeoutTest() = uspekTestFactory {
 
-        uspek {
+        "Test X with1sTimeout" o {
 
             "On launch code block with1STimeout" o {
 

@@ -1,6 +1,12 @@
+import pl.mareklangiewicz.defaults.*
+
 plugins {
     application
     kotlin("jvm")
+}
+
+repositories {
+    defaultRepos()
 }
 
 application {
@@ -8,13 +14,12 @@ application {
 }
 
 dependencies {
-    implementation(Deps.kotlinStdlib8)
-    implementation(Deps.rxjava)
-    implementation(Deps.rxrelay)
-    implementation(Deps.kotlinxCoroutinesCore)
-    implementation(Deps.kotlinxCoroutinesRx2)
-    testImplementation(Deps.junit)
-    testImplementation(Deps.uspek)
+    implementation(deps.rxjava3)
+    implementation(deps.rxrelay)
+    implementation(deps.kotlinxCoroutinesCore)
+    implementation(deps.kotlinxCoroutinesRx3)
+    testImplementation(deps.junit5)
+    testImplementation(deps.uspekx)
     testImplementation(project(":smokk"))
     testImplementation(project(":smokkx"))
 //    testImplementation("com.github.langara:SMokK:0.0.2")

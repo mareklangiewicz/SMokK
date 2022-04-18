@@ -4,25 +4,20 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.TestFactory
 import pl.mareklangiewicz.smokkx.smokkx
-import pl.mareklangiewicz.uspek.USpekRunner
-import pl.mareklangiewicz.uspek.eq
-import pl.mareklangiewicz.uspek.o
-import pl.mareklangiewicz.uspek.uspek
+import pl.mareklangiewicz.uspek.*
 import kotlin.Result.Companion.success
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-@RunWith(USpekRunner::class)
 class GetUserDetailsFastXTest {
 
     @ExperimentalCoroutinesApi
-    @Test
-    fun getUserDetailsFastXTest() {
+    @TestFactory
+    fun getUserDetailsFastXTest() = uspekTestFactory {
 
-        uspek {
+        "Test X getUserDetailsFast" o {
 
             "On getUserDetailsFast" o {
 

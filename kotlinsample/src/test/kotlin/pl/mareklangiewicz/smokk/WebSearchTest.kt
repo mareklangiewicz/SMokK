@@ -1,27 +1,22 @@
 package pl.mareklangiewicz.smokk
 
-import io.reactivex.subjects.PublishSubject
+import io.reactivex.rxjava3.subjects.PublishSubject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.junit.Test
-import org.junit.runner.RunWith
-import pl.mareklangiewicz.uspek.USpekRunner
-import pl.mareklangiewicz.uspek.eq
-import pl.mareklangiewicz.uspek.o
-import pl.mareklangiewicz.uspek.uspek
+import org.junit.jupiter.api.TestFactory
+import pl.mareklangiewicz.uspek.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 @ExperimentalCoroutinesApi
-@RunWith(USpekRunner::class)
 class WebSearchTest {
 
-    @Test
-    fun webSearchTest() {
+    @TestFactory
+    fun webSearchTest() = uspekTestFactory {
 
-        uspek {
+        "Test webSearch" o {
 
             "On one huge webSearch test" o { // TODO: use suspek and split into small test cases
 

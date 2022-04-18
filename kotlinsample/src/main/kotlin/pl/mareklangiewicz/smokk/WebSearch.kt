@@ -1,7 +1,7 @@
 package pl.mareklangiewicz.smokk
 
-import io.reactivex.Observable
-import kotlinx.coroutines.rx2.awaitFirstOrNull
+import io.reactivex.rxjava3.core.Observable
+import kotlinx.coroutines.rx3.awaitFirstOrNull
 
 suspend fun webSearch(
     inputTextChangeS: Observable<String>,
