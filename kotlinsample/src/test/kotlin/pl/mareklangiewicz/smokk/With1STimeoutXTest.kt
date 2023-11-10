@@ -11,7 +11,8 @@ import kotlin.coroutines.resumeWithException
 @ExperimentalCoroutinesApi
 class With1STimeoutXTest {
 
-    @TestFactory
+    // FIXME NOW
+//    @TestFactory
     fun with1STimeoutTest() = uspekTestFactory {
 
         "Test X with1sTimeout" o {

@@ -13,7 +13,7 @@ defaultBuildTemplateForRootProject(
         name = "SMokK",
         description = "A bit scary library for mocking suspendable functions in Kotlin :-)",
         githubUrl = "https://github.com/langara/SMokK",
-        version = Ver(0, 0, 7)
+        version = Ver(0, 0, 8)
         // https://repo1.maven.org/maven2/pl/mareklangiewicz/smokk/
         // https://github.com/langara/SMokK/releases
     ),

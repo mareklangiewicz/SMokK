@@ -1,9 +1,6 @@
 package pl.mareklangiewicz.smokk
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
+import kotlinx.coroutines.*
 import org.junit.jupiter.api.TestFactory
 import pl.mareklangiewicz.smokkx.smokkx
 import pl.mareklangiewicz.uspek.*
@@ -11,6 +8,7 @@ import kotlin.Result.Companion.success
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+@OptIn(DelicateCoroutinesApi::class)
 class GetUserDetailsFastXTest {
 
     @ExperimentalCoroutinesApi
