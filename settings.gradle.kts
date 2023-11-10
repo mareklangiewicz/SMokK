@@ -25,4 +25,4 @@ rootProject.name = "SMokK"
 
 include(":smokk")
 include(":smokkx")
-include(":kotlinsample")
+include(":smokksample")
