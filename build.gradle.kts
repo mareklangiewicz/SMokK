@@ -20,10 +20,6 @@ defaultBuildTemplateForRootProject(
     withSonatypeOssPublishing = true,
 )
 
-// FIXME: make sure this region below is synced, but not as a part of "self-sync" as it was in DepsKt,
-//   but as normal sync when syncing all regions in all projects.
-//   The "self-sync" should only sync templates (and be renamed to templates-sync or sth)
-
 // region [Root Build Template]
 
 /** Publishing to Sonatype OSSRH has to be explicitly allowed here, by setting withSonatypeOssPublishing to true. */
