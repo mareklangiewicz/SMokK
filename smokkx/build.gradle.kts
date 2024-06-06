@@ -33,7 +33,7 @@ fun Project.setMyWeirdSubstitutions(
           .using(
             // Note: there are different fun in gradle: Project.project; DependencySubstitution.project
             if (foundLocalProjects[projName] != null) project(":$projName")
-            else module("$myProjectsGroup:$projName:$projVer"),
+            else module("$myProjectsGroup:$projName:$projVer")
           )
     }
   }
