@@ -34,38 +34,38 @@ class GetUserDetailsFastXTest {
           }
         }
 
-        "is active" o { deferred.isActive eq true }
-        "getting cached details started" o { getCachedUserDetails.invocations eq listOf(7) }
-        "fetching details started too" o { fetchUserDetails.invocations eq listOf(7) }
+        "is active" o { deferred.isActive chkEq true }
+        "getting cached details started" o { getCachedUserDetails.invocations chkEq listOf(7) }
+        "fetching details started too" o { fetchUserDetails.invocations chkEq listOf(7) }
 
         "On cached details" o {
           getCachedUserDetails.resume("cached details")
 
-          "fetching is cancelled" o { fetchUserDetails.cancellations eq 1 }
-          "return cached details" o { deferred.getCompleted() eq success("cached details") }
+          "fetching is cancelled" o { fetchUserDetails.cancellations chkEq 1 }
+          "return cached details" o { deferred.getCompleted() chkEq success("cached details") }
         }
 
         "On no cached details" o {
           getCachedUserDetails.resume(null)
 
-          "is still active" o { deferred.isActive eq true }
+          "is still active" o { deferred.isActive chkEq true }
 
           "On fetched details " o {
             fetchUserDetails.resume("details from network")
 
             "put fetched details to cache" o {
-              putCachedUserDetails.invocations eq listOf(7 to "details from network")
+              putCachedUserDetails.invocations chkEq listOf(7 to "details from network")
               // putCachedUserDetails resumes immediately thanks to autoResume
             }
-            "return fetched details" o { deferred.getCompleted() eq success("details from network") }
+            "return fetched details" o { deferred.getCompleted() chkEq success("details from network") }
           }
 
           "On fetching network error" o {
             fetchUserDetails.resumeWithException(RuntimeException("network error"))
 
-            "do not put anything to cache" o { putCachedUserDetails.invocations.size eq 0 }
-            "is completed" o { deferred.isCompleted eq true }
-            "return failure" o { deferred.getCompleted().exceptionOrNull()?.message eq "network error" }
+            "do not put anything to cache" o { putCachedUserDetails.invocations.size chkEq 0 }
+            "is completed" o { deferred.isCompleted chkEq true }
+            "return failure" o { deferred.getCompleted().exceptionOrNull()?.message chkEq "network error" }
           }
 
         }
@@ -73,14 +73,14 @@ class GetUserDetailsFastXTest {
         "On cancel whole thing from outside" o {
           deferred.cancel()
 
-          "getting cached details is cancelled" o { getCachedUserDetails.cancellations eq 1 }
+          "getting cached details is cancelled" o { getCachedUserDetails.cancellations chkEq 1 }
         }
 
         "On cached details error" o {
           getCachedUserDetails.resumeWithException(RuntimeException("cache error"))
 
-          "fetching is cancelled" o { fetchUserDetails.cancellations eq 1 }
-          "return cache error" o { deferred.getCompleted().exceptionOrNull()?.message eq "cache error" }
+          "fetching is cancelled" o { fetchUserDetails.cancellations chkEq 1 }
+          "return cache error" o { deferred.getCompleted().exceptionOrNull()?.message chkEq "cache error" }
         }
       }
     }

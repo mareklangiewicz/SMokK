@@ -26,31 +26,31 @@ class With1STimeoutXTest {
           with1STimeout(delay1s::invoke, block::invoke)
         }
 
-        "job is active" o { job.isActive eq true }
-        "block has started" o { block.invocations eq 1 }
-        "delay1s has started" o { delay1s.invocations eq 1 }
+        "job is active" o { job.isActive chkEq true }
+        "block has started" o { block.invocations chkEq 1 }
+        "delay1s has started" o { delay1s.invocations chkEq 1 }
 
         "On block completion" o {
           block.resume(Unit)
 
-          "delay1s is cancelled" o { delay1s.cancellations eq 1 }
-          "job is not cancelled" o { job.isCancelled eq false }
-          "job is completed" o { job.isCompleted eq true }
+          "delay1s is cancelled" o { delay1s.cancellations chkEq 1 }
+          "job is not cancelled" o { job.isCancelled chkEq false }
+          "job is completed" o { job.isCompleted chkEq true }
         }
 
         "On block exception" o {
           block.resumeWithException(RuntimeException())
 
-          "delay1s is cancelled" o { delay1s.cancellations eq 1 }
-          "job is cancelled" o { job.isCancelled eq true }
+          "delay1s is cancelled" o { delay1s.cancellations chkEq 1 }
+          "job is cancelled" o { job.isCancelled chkEq true }
         }
 
         "On 1s timeout" o {
           delay1s.resume(Unit)
 
-          "block is cancelled" o { block.cancellations eq 1 }
-          "job is not cancelled" o { job.isCancelled eq false }
-          "job is completed" o { job.isCompleted eq true }
+          "block is cancelled" o { block.cancellations chkEq 1 }
+          "job is not cancelled" o { job.isCancelled chkEq false }
+          "job is completed" o { job.isCompleted chkEq true }
         }
       }
     }
