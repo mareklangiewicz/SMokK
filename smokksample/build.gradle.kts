@@ -1,14 +1,20 @@
+
+// region [[Basic MPP App Build Imports and Plugs]]
+
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
+import com.vanniktech.maven.publish.*
 import pl.mareklangiewicz.defaults.*
 import pl.mareklangiewicz.deps.*
 import pl.mareklangiewicz.utils.*
 
 plugins {
-  plugAll(plugs.KotlinMulti)
+  plugAll(plugs.KotlinMulti, plugs.VannikPublish)
 }
 
-defaultBuildTemplateForBasicMppApp(appMainPackage = "pl.mareklangiewicz.smokk") {
+// endregion [[Basic MPP App Build Imports and Plugs]]
+
+defaultBuildTemplateForBasicMppApp() {
   implementation(project(":smokk"))
   implementation(project(":smokkx"))
 }
@@ -50,6 +56,7 @@ fun Project.setMyWeirdSubstitutions(
 }
 
 fun RepositoryHandler.addRepos(settings: LibReposSettings) = with(settings) {
+  @Suppress("DEPRECATION")
   if (withMavenLocal) mavenLocal()
   if (withMavenCentral) mavenCentral()
   if (withGradle) gradlePluginPortal()
@@ -57,31 +64,24 @@ fun RepositoryHandler.addRepos(settings: LibReposSettings) = with(settings) {
   if (withKotlinx) maven(repos.kotlinx)
   if (withKotlinxHtml) maven(repos.kotlinxHtml)
   if (withComposeJbDev) maven(repos.composeJbDev)
-  if (withComposeCompilerAxDev) maven(repos.composeCompilerAxDev)
   if (withKtorEap) maven(repos.ktorEap)
   if (withJitpack) maven(repos.jitpack)
 }
 
-// FIXME: doc says it could be now also applied globally instead for each task (and it works for andro too)
-// https://kotlinlang.org/docs/gradle-compiler-options.html#target-the-jvm
+// TODO_maybe: doc says it could be now also applied globally instead for each task (and it works for andro too)
 //   But it's only for jvm+andro, so probably this is better:
 //   https://kotlinlang.org/docs/gradle-compiler-options.html#for-all-kotlin-compilation-tasks
 fun TaskCollection<Task>.defaultKotlinCompileOptions(
-  jvmTargetVer: String? = vers.JvmDefaultVer, // FIXME_later: use JvmTarget.JVM_XX enum
+  apiVer: KotlinVersion = KotlinVersion.KOTLIN_2_1,
+  jvmTargetVer: String? = null, // it's better to use jvmToolchain (normally done in fun allDefault)
   renderInternalDiagnosticNames: Boolean = false,
-  suppressComposeCheckKotlinVer: Ver? = null,
 ) = withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
   compilerOptions {
-    apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0) // FIXME_later: add param.
+    apiVersion.set(apiVer)
     jvmTargetVer?.let { jvmTarget = JvmTarget.fromTarget(it) }
     if (renderInternalDiagnosticNames) freeCompilerArgs.add("-Xrender-internal-diagnostic-names")
     // useful, for example, to suppress some errors when accessing internal code from some library, like:
     // @file:Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE", "EXPOSED_PARAMETER_TYPE", "EXPOSED_PROPERTY_TYPE", "CANNOT_OVERRIDE_INVISIBLE_MEMBER")
-    suppressComposeCheckKotlinVer?.ver?.let {
-      freeCompilerArgs.add(
-        "-Pplugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=$it",
-      )
-    }
   }
 }
 
@@ -98,7 +98,7 @@ fun TaskCollection<Task>.defaultTestsOptions(
 }
 
 // Provide artifacts information requited by Maven Central
-fun MavenPublication.defaultPOM(lib: LibDetails) = pom {
+fun MavenPom.defaultPOM(lib: LibDetails) {
   name put lib.name
   description put lib.description
   url put lib.githubUrl
@@ -119,93 +119,14 @@ fun MavenPublication.defaultPOM(lib: LibDetails) = pom {
   scm { url put lib.githubUrl }
 }
 
-/** See also: root project template-mpp: addDefaultStuffFromSystemEnvs */
-fun Project.defaultSigning(
-  keyId: String = rootExtString["signing.keyId"],
-  key: String = rootExtReadFileUtf8TryOrNull("signing.keyFile") ?: rootExtString["signing.key"],
-  password: String = rootExtString["signing.password"],
-) = extensions.configure<SigningExtension> {
-  useInMemoryPgpKeys(keyId, key, password)
-  sign(extensions.getByType<PublishingExtension>().publications)
-}
-
-fun Project.defaultPublishing(
-  lib: LibDetails,
-  readmeFile: File = File(rootDir, "README.md"),
-  withSignErrorWorkaround: Boolean = true,
-  withPublishingPrintln: Boolean = false, // FIXME_later: enabling brakes gradle android publications
-) {
-
-  val readmeJavadocJar by tasks.registering(Jar::class) {
-    from(readmeFile) // TODO_maybe: use dokka to create real docs? (but it's not even java..)
-    archiveClassifier put "javadoc"
-  }
-
-  extensions.configure<PublishingExtension> {
-
-    // We have at least two cases:
-    // 1. With plug.KotlinMulti it creates publications automatically (so no need to create here)
-    // 2. With plug.KotlinJvm it does not create publications (so we have to create it manually)
-    if (plugins.hasPlugin("org.jetbrains.kotlin.jvm")) {
-      publications.create<MavenPublication>("jvm") {
-        from(components["kotlin"])
-      }
-    }
-
-    publications.withType<MavenPublication> {
-      artifact(readmeJavadocJar)
-      // Adding javadoc artifact generates warnings like:
-      // Execution optimizations have been disabled for task ':uspek:signJvmPublication'
-      // (UPDATE: now it's errors - see workaround below)
-      // It looks like a bug in kotlin multiplatform plugin:
-      // https://youtrack.jetbrains.com/issue/KT-46466
-      // FIXME_someday: Watch the issue.
-      // If it's a bug in kotlin multiplatform then remove this comment when it's fixed.
-      // Some related bug reports:
-      // https://youtrack.jetbrains.com/issue/KT-47936
-      // https://github.com/gradle/gradle/issues/17043
-
-      defaultPOM(lib)
-    }
-  }
-  if (withSignErrorWorkaround) tasks.withSignErrorWorkaround() // very much related to comments above too
-  if (withPublishingPrintln) tasks.withPublishingPrintln()
-}
-
-/*
-Hacky workaround for gradle error with signing+publishing on gradle 8.1-rc-1:
-
-FAILURE: Build failed with an exception.
-
-* What went wrong:
-A problem was found with the configuration of task ':template-mpp-lib:signJvmPublication' (type 'Sign').
-  - Gradle detected a problem with the following location: '/home/marek/code/kotlin/DepsKt/template-mpp/template-mpp-lib/build/libs/template-mpp-lib-0.0.02-javadoc.jar.asc'.
-
-    Reason: Task ':template-mpp-lib:publishJsPublicationToMavenLocal' uses this output of task ':template-mpp-lib:signJvmPublication' without declaring an explicit or implicit dependency. This can lead to incorrect results being produced, depending on what order the tasks are executed.
-
-    Possible solutions:
-      1. Declare task ':template-mpp-lib:signJvmPublication' as an input of ':template-mpp-lib:publishJsPublicationToMavenLocal'.
-      2. Declare an explicit dependency on ':template-mpp-lib:signJvmPublication' from ':template-mpp-lib:publishJsPublicationToMavenLocal' using Task#dependsOn.
-      3. Declare an explicit dependency on ':template-mpp-lib:signJvmPublication' from ':template-mpp-lib:publishJsPublicationToMavenLocal' using Task#mustRunAfter.
-
-    Please refer to https://docs.gradle.org/8.1-rc-1/userguide/validation_problems.html#implicit_dependency for more details about this problem.
-
- */
-fun TaskContainer.withSignErrorWorkaround() =
-  withType<AbstractPublishToMaven>().configureEach { dependsOn(withType<Sign>()) }
-
-fun TaskContainer.withPublishingPrintln() = withType<AbstractPublishToMaven>().configureEach {
-  val coordinates = publication.run { "$groupId:$artifactId:$version" }
-  when (this) {
-    is PublishToMavenRepository -> doFirst {
-      println("Publishing $coordinates to ${repository.url}")
-    }
-    is PublishToMavenLocal -> doFirst {
-      val localRepo = System.getenv("HOME")!! + "/.m2/repository"
-      val localPath = localRepo + publication.run { "/$groupId/$artifactId".replace('.', '/') }
-      println("Publishing $coordinates to $localPath")
-    }
-  }
+fun Project.defaultPublishing(lib: LibDetails) = extensions.configure<MavenPublishBaseExtension> {
+  propertiesTryOverride("signingInMemoryKey", "signingInMemoryKeyPassword", "mavenCentralPassword")
+  if (lib.settings.withSonatypeOssPublishing)
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL, automaticRelease = false)
+  signAllPublications()
+  // Note: artifactId is not lib.name but current project.name (module name)
+  coordinates(groupId = lib.group, artifactId = name, version = lib.version.str)
+  pom { defaultPOM(lib) }
 }
 
 // endregion [[Kotlin Module Build Template]]
@@ -242,14 +163,11 @@ fun Project.defaultBuildTemplateForBasicMppLib(
       addCommonMainDependencies = addCommonMainDependencies,
     )
   }
-  configurations.checkVerSync()
-  tasks.defaultKotlinCompileOptions(details.settings.withJvmVer)
+  configurations.checkVerSync(warnOnly = true)
+  tasks.defaultKotlinCompileOptions(jvmTargetVer = null) // jvmVer is set in fun allDefault using jvmToolchain
   tasks.defaultTestsOptions(onJvmUseJUnitPlatform = details.settings.withTestJUnit5)
-  if (plugins.hasPlugin("maven-publish")) {
-    defaultPublishing(details)
-    if (plugins.hasPlugin("signing")) defaultSigning()
-    else println("MPP Module ${name}: signing disabled")
-  } else println("MPP Module ${name}: publishing (and signing) disabled")
+  if (plugins.hasPlugin("com.vanniktech.maven.publish")) defaultPublishing(details)
+  else println("MPP Module ${name}: publishing (and signing) disabled")
 }
 
 /**
@@ -281,6 +199,7 @@ fun KotlinMultiplatformExtension.allDefault(
   if (withAndro && !ignoreAndroTarget) androidTarget {
     // TODO_someday some kmp andro publishing. See kdoc above why not yet.
   }
+  withJvmVer?.let { jvmToolchain(it.toInt()) } // works for jvm and android
   sourceSets {
     val commonMain by getting {
       dependencies {
@@ -290,7 +209,7 @@ fun KotlinMultiplatformExtension.allDefault(
     }
     val commonTest by getting {
       dependencies {
-        implementation(kotlin("test"))
+        implementation(Kotlin.test)
         if (withTestUSpekX) implementation(Langiewicz.uspekx)
       }
     }
@@ -298,7 +217,10 @@ fun KotlinMultiplatformExtension.allDefault(
       val jvmTest by getting {
         dependencies {
           if (withTestJUnit4) implementation(JUnit.junit)
-          if (withTestJUnit5) implementation(Org.JUnit.Jupiter.junit_jupiter_engine)
+          if (withTestJUnit5) {
+            implementation(Org.JUnit.Jupiter.junit_jupiter_engine)
+            runtimeOnly(Org.JUnit.Platform.junit_platform_launcher)
+          }
           if (withTestUSpekX) {
             implementation(Langiewicz.uspekx)
             if (withTestJUnit4) implementation(Langiewicz.uspekx_junit4)
@@ -343,8 +265,6 @@ fun KotlinMultiplatformExtension.jsDefault(
 // region [[MPP App Build Template]]
 
 fun Project.defaultBuildTemplateForBasicMppApp(
-  appMainPackage: String,
-  appMainFun: String = "main",
   details: LibDetails = rootExtLibDetails,
   ignoreCompose: Boolean = false, // so user have to explicitly say THAT he wants to ignore compose settings here.
   ignoreAndroTarget: Boolean = false, // so user have to explicitly say IF he wants to ignore it.
@@ -361,15 +281,17 @@ fun Project.defaultBuildTemplateForBasicMppApp(
   )
   extensions.configure<KotlinMultiplatformExtension> {
     if (details.settings.withJvm) jvm {
-      println("MPP App ${project.name}: Generating general jvm executables with kotlin multiplatform plugin is not supported (without compose).")
-      // TODO_someday: Will they support multiplatform way of declaring jvm app?
-      // binaries.executable()
-      // UPDATE:TODO_later: analyze experimental: mainRun {  } it doesn't work yet (compilation fails) even though IDE recognizes it
-      // for now workaround is: kotlin { jvm { withJava() } }; application { mainClass.set("...") }
-      // but I don't want to include such old dsl in this default fun.
-      // see also:
-      // https://youtrack.jetbrains.com/issue/KT-45038
-      // https://youtrack.jetbrains.com/issue/KT-31424
+      mainRun {
+        mainClass = details.run { "$appMainPackage.$appMainClass" }
+        logger.info("MPP App ${project.name}: MPP plugin (without compose) just adds jvmRun task (experimental). No executable.")
+        // Workaround to generate jvm binary: Separate jvm module with plugAll(plugs.KotlinJvm, plugs.JvmApp)
+        // As Gradle/KMP warning says (when trying to combine KotlinMulti with JvmApp):
+        // w: 'application' (also applies 'java' plugin) Gradle plugin is not compatible with 'org.jetbrains.kotlin.multiplatform' plugin.
+        // Consider adding a new subproject with 'application' plugin where the KMP project is added as a dependency.
+        // see also:
+        // https://youtrack.jetbrains.com/issue/KT-45038
+        // https://youtrack.jetbrains.com/issue/KT-31424
+      }
     }
     if (details.settings.withJs) js(IR) {
       binaries.executable()
@@ -377,7 +299,7 @@ fun Project.defaultBuildTemplateForBasicMppApp(
     if (details.settings.withNativeLinux64) linuxX64 {
       binaries {
         executable {
-          entryPoint = "$appMainPackage.$appMainFun"
+          entryPoint = details.run { "$appMainPackage.$appMainFun" }
         }
       }
     }
